@@ -135,6 +135,13 @@ def SubprocessCall(command,suppress_error) :
 def StripReturns(s) :
     return s.replace('\r','')
 
+def decoded_as_needed(data) :
+    # try UTF-8 first, else ISO-8859-15 (which accepts any byte)
+    try :
+        return data.decode("utf-8")
+    except UnicodeDecodeError :
+        return data.decode("iso8859_15")
+
 def QuoteMe(param) :
     if param and param[0] not in ('\'','"') :
         # It's not already quoted, so put apostrophes around it:
@@ -171,10 +178,10 @@ def RunCommand(command) :
     sys.stdout.flush()
     sys.stderr.flush()
     std_file.seek(0)
-    result_std = std_file.read().decode("utf-8").replace('\r','')  # A nod to Windows
+    result_std = decoded_as_needed(std_file.read()).replace('\r','')  # A nod to Windows
     std_file.close()
     err_file.seek(0)
-    result_err = err_file.read().decode("utf-8").replace('\r','')  # A nod to Windows
+    result_err = decoded_as_needed(err_file.read()).replace('\r','')  # A nod to Windows
     err_file.close()
 
     return errcode, result_std, result_err
@@ -697,7 +704,7 @@ def Main() :
             if ECHO :
                 SmartPrint(["COBC_GEN_DUMP_COMMENTS=1"]+TRIPLE_X_COMMAND)
             compiler_out = subprocess.check_output(TRIPLE_X_COMMAND,stderr=result_file)
-            compiler_out = StripReturns(compiler_out.decode("utf-8")).split('\n')
+            compiler_out = StripReturns(decoded_as_needed(compiler_out)).split('\n')
             ## The first three lines are boilerplate.  Anything after that is a compiler output,
             ## like a >> DISPLAY directive, and so on
             for line in compiler_out[3:-1] :    # the split puts a spurious ' ' at the end
@@ -707,13 +714,13 @@ def Main() :
             result_file.seek(0)
             result_text = result_file.read()
             result_file.close()
-            result_text = StripReturns(result_text.decode("utf-8"))
-        except :
+            result_text = StripReturns(decoded_as_needed(result_text))
+        except Exception as err :
             ## It is common for something to go wrong with that first attempt; anything
             ## from bad file names to syntax errors in the code.  Let's go for a minimal
             ## response with an ordinary compilation and exit
             command = [COBC] + ORIGINAL_COMMAND_LINE
-            print('#### Ordinary compile due to thrown exception')
+            print('#### Ordinary compile due to thrown exception:',repr(err))
             SmartPrint(command)
             ## Execute it, ensuring we report a failure via return code:
             resultcode = SubprocessCall(command,True)

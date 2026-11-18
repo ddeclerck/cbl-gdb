@@ -1,0 +1,8 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. LATIN9.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01 W-A PIC 9.
+       PROCEDURE DIVISION.
+           MOVE "ä" TO W-A.
+           STOP RUN.

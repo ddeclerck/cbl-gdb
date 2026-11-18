@@ -1,3 +1,6 @@
+2026-11-17  David Declerck <david.declerck@ocamlpro.com>
+	* cobcd: decode the compiler output as UTF-8, or ISO-8859-15 if invalid
+
 2020-12-09  Bob Dubner <rdubner@symas.com>
 	* Release 4.13
 	* Made -save-temps processing delete .s files, per Simon's request
