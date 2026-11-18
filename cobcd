@@ -50,6 +50,7 @@ import subprocess
 import tempfile
 import shutil
 import time
+import re
 
 def usage(version) :
     print("This is the cobc debugging wrapper", version)
@@ -223,10 +224,14 @@ def SmartPrint(parameters) :
         print(param,' ',sep='',end='')
     print('')
 
+def IsContextLine(line) :
+    # source context line printed by cobc, like "    5 | text" or "    5 > text"
+    return re.match(r'\s*(\d+\s*[|>]|\|)',line) is not None
+
 def CollapseFoldedLines(lines) :
     output = ""
     for line in lines.split('\n') :
-        if line and line[0] != ' ' and line[0] != '\t' :
+        if line and ((line[0] != ' ' and line[0] != '\t') or IsContextLine(line)) :
             ## This is the beginning of a new line:
             output += '\n'
             output += line
@@ -750,7 +755,7 @@ def Main() :
     for line in result_lines.split('\n') :
         #print("")
         #print("Processing line:",line,waiting_for_initial_file)
-        if line and ( line.find("warning:") != -1 or line.find("note:") != -1 or line[-1] == ':' ) :
+        if line and ( line.find("warning:") != -1 or line.find("note:") != -1 or line[-1] == ':' or IsContextLine(line) ) :
             line += '\n'
             sys.stderr.write(line)
             sys.stderr.flush()
